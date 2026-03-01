@@ -6,14 +6,12 @@
     <script src="xterm.js"></script>
     <style>
         html, body { background-color: #000; margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; }
-        #terminal { width: 100vw; height: 100vh; background-color: #000; padding: 10px; box-sizing: border-box; }
-        /* Ocultar visualizador de imágenes por defecto */
-        #img-viewer { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); max-width: 80%; max-height: 80%; display: none; border: 2px solid #444; }
+        #terminal { width: 100vw; height: 100vh; background-color: #000; padding: 15px; box-sizing: border-box; }
     </style>
 </head>
 <body>
     <div id="terminal"></div>
-    <img id="img-viewer" />
+    <!-- Cargar comandos primero, luego la terminal -->
     <script src="commands.js"></script>
     <script src="terminal.js"></script>
 </body>

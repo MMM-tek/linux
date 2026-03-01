@@ -11,53 +11,62 @@ window.onload = function() {
 
     let inputBuffer = '';
     let isEditing = false;
-    window.currentFileContent = ""; 
-
     const prompt = () => term.write(`\x1b[32muser@vscode\x1b[0m:\x1b[34m~\x1b[0m$ `);
-    prompt(); // Sin título, directo al prompt
+    
+    prompt(); // Sin títulos al inicio
 
-    term.onData(async data => {
+    term.onData(async (data) => {
+        // --- LÓGICA MODO NANO ---
         if (isEditing) {
-            if (data.charCodeAt(0) === 24) { // CTRL+X
+            const charCode = data.charCodeAt(0);
+            if (charCode === 24) { // CTRL+X para salir
                 isEditing = false;
                 term.clear();
-                term.write("Edits kept in buffer. Type 'save' to write to disk.");
+                term.write("Nano closed. Use 'save' to apply changes to PC.\r\n");
                 prompt();
-            } else if (data.charCodeAt(0) === 13) {
-                window.currentFileContent += '\n'; term.write('\n');
-            } else if (data.charCodeAt(0) === 127) {
-                window.currentFileContent = window.currentFileContent.slice(0, -1);
-                term.write('\b \b');
+            } else if (charCode === 13) { // ENTER
+                fileContent += '\n'; term.write('\n');
+            } else if (charCode === 127) { // BACKSPACE
+                if (fileContent.length > 0) {
+                    fileContent = fileContent.slice(0, -1);
+                    term.write('\b \b');
+                }
             } else {
-                window.currentFileContent += data; term.write(data);
+                fileContent += data;
+                term.write(data);
             }
             return;
         }
 
-        if (data.charCodeAt(0) === 13) {
+        // --- LÓGICA MODO TERMINAL ---
+        if (data.charCodeAt(0) === 13) { // ENTER
             term.write('\r\n');
-            const parts = inputBuffer.trim().split(/\s+/);
-            const cmd = parts[0].toLowerCase();
-            const args = parts.slice(1);
+            const cmd = inputBuffer.trim().toLowerCase();
 
-            if (commands[cmd]) {
-                const res = await commands[cmd](args, term);
-                if (res && res.mode === 'edit') {
-                    isEditing = true;
-                    term.clear();
-                    term.write("\x1b[47;30m NANO EDITOR \x1b[0m (Write text... CTRL+X to exit)\r\n\r\n");
-                    term.write(window.currentFileContent);
-                } else if (res) { term.write(res); prompt(); }
-                else { prompt(); }
+            if (cmd === 'nano') {
+                isEditing = true;
+                term.clear();
+                term.write("\x1b[47;30m GNU nano 5.4 \x1b[0m (CTRL+X to Save & Exit)\r\n\r\n");
+                term.write(fileContent);
+            } else if (commands[cmd]) {
+                const result = await commands[cmd](null, term);
+                term.write(result);
+                prompt();
             } else if (cmd !== "") {
                 term.write(`bash: ${cmd}: command not found\r\n`);
                 prompt();
-            } else { prompt(); }
+            } else {
+                prompt();
+            }
             inputBuffer = '';
-        } else if (data.charCodeAt(0) === 127) {
-            if (inputBuffer.length > 0) { inputBuffer = inputBuffer.slice(0, -1); term.write('\b \b'); }
-        } else {
-            inputBuffer += data; term.write(data);
+        } else if (data.charCodeAt(0) === 127) { // BACKSPACE
+            if (inputBuffer.length > 0) {
+                inputBuffer = inputBuffer.slice(0, -1);
+                term.write('\b \b');
+            }
+        } else if (data >= " " && data <= "~") {
+            inputBuffer += data;
+            term.write(data);
         }
     });
 };

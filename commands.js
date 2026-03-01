@@ -1,53 +1,33 @@
-let fileHandle = null; // Referencia al archivo real del PC
+// Variables globales para el manejo de archivos
+let currentFileHandle = null;
+let fileContent = '';
 
 const commands = {
-    'help': () => "REAL FILES: open (select file), save (save edits)\nEDIT: nano (edit buffer), cat (show content)\nMEDIA: view (show image), close (hide image)\nSYSTEM: clear, date, whoami",
-
-    // Seleccionar un archivo real del ordenador
-    'open': async (args, term) => {
+    'help': () => "FILES:  open (select PC file), save (write to PC), cat (show content)\r\nEDIT:   nano (edit text), clear (clean screen)\r\nSYSTEM: date, whoami\r\n",
+    
+    'open': async () => {
         try {
-            [fileHandle] = await window.showOpenFilePicker();
-            const file = await fileHandle.getFile();
-            const content = await file.text();
-            window.currentFileContent = content; // Guardamos en memoria
-            return `\x1b[32mFile '${file.name}' loaded into buffer.\x1b[0m\r\n`;
-        } catch (e) { return "Open cancelled or error.\r\n"; }
+            // Abre el selector de archivos nativo de Windows/Mac
+            [currentFileHandle] = await window.showOpenFilePicker();
+            const file = await currentFileHandle.getFile();
+            fileContent = await file.text();
+            return `\x1b[32mFile '${file.name}' loaded successfully.\x1b[0m\r\n`;
+        } catch (e) { return "Operation cancelled.\r\n"; }
     },
 
-    // Guardar los cambios en el archivo real
     'save': async () => {
-        if (!fileHandle) return "No file opened. Use 'open' first.\r\n";
+        if (!currentFileHandle) return "Error: No file opened. Use 'open' first.\r\n";
         try {
-            const writable = await fileHandle.createWritable();
-            await writable.write(window.currentFileContent);
+            // Solicita permiso de escritura al sistema operativo
+            const writable = await currentFileHandle.createWritable();
+            await writable.write(fileContent);
             await writable.close();
-            return "\x1b[32mChanges saved to disk.\x1b[0m\r\n";
-        } catch (e) { return "Permission denied to save.\r\n"; }
+            return "\x1b[32mChanges saved to your computer.\x1b[0m\r\n";
+        } catch (e) { return "Error: Permission denied or saving failed.\r\n"; }
     },
 
-    'nano': () => ({ mode: 'edit' }),
-
-    'cat': () => (window.currentFileContent || "Buffer empty") + "\r\n",
-
-    // Ver imágenes reales
-    'view': async () => {
-        try {
-            const [handle] = await window.showOpenFilePicker({ types:} }] });
-            const file = await handle.getFile();
-            const url = URL.createObjectURL(file);
-            const img = document.getElementById('img-viewer');
-            img.src = url;
-            img.style.display = 'block';
-            return "\x1b[35mShowing image... type 'close' to hide.\x1b[0m\r\n";
-        } catch (e) { return "Error opening image.\r\n"; }
-    },
-
-    'close': () => {
-        document.getElementById('img-viewer').style.display = 'none';
-        return "Image closed.\r\n";
-    },
-
+    'cat': () => (fileContent || "Buffer is empty") + "\r\n",
     'clear': (args, term) => { term.clear(); return ""; },
     'date': () => new Date().toString() + "\r\n",
-    'whoami': () => "user@vscode-pc\r\n"
+    'whoami': () => "vscode-web-user\r\n"
 };
