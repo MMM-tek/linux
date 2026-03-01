@@ -1,52 +1,19 @@
 <!doctype html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Mi Terminal Web</title>
-  <!-- Cargamos los archivos desde la carpeta principal -->
-  <link rel="stylesheet" href="xterm.css" />
-  <script src="xterm.js"></script>
-  <style>
-    body { background: #000; margin: 0; }
-    #terminal { height: 100vh; width: 100%; }
-  </style>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="xterm.css" />
+    <style>
+        body { background: #000; margin: 0; }
+        #terminal { height: 100vh; width: 100%; }
+    </style>
 </head>
 <body>
-  <div id="terminal"></div>
+    <div id="terminal"></div>
 
-  <script>
-    // Esperamos a que la página cargue por completo
-    window.onload = function() {
-      try {
-        // Inicializamos usando la referencia global correcta
-        const term = new window.Terminal({
-          cursorBlink: true,
-          theme: { background: '#000000' }
-        });
-
-        const container = document.getElementById('terminal');
-        term.open(container);
-        
-        // Escribimos un mensaje inicial
-        term.write('Terminal lista. Escribe algo: \r\n$ ');
-
-        // Lógica para que lo que escribas se vea en pantalla
-        term.onData(data => {
-          // Si presionas Enter (código ASCII 13)
-          if (data === '\r') {
-            term.write('\r\n$ ');
-          } else if (data === '\u007f') { // Backspace
-            term.write('\b \b');
-          } else {
-            term.write(data);
-          }
-        });
-
-      } catch (error) {
-        console.error("Error al cargar la terminal:", error);
-        document.body.innerHTML = "<h1 style='color:white'>Error de carga. Revisa la consola (F12).</h1>";
-      }
-    };
-  </script>
+    <!-- 1. La librería xterm -->
+    <script src="xterm.js"></script>
+    <!-- 2. Tu archivo de comandos -->
+    <script src="script.js"></script>
 </body>
 </html>
