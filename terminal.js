@@ -1,13 +1,24 @@
 window.onload = function() {
-    // Configuración visual de la terminal
+    // Configuración para que se vea como una terminal normal
     const term = new window.Terminal({
         cursorBlink: true,
-        theme: { background: '#1e1e1e', foreground: '#d4d4d4' },
-        fontSize: 14
+        rows: 30, // Más filas para que ocupe espacio
+        theme: {
+            background: '#000000', // Negro puro como antes
+            foreground: '#ffffff', // Blanco para el texto
+            cursor: '#ffffff',
+            selection: 'rgba(255, 255, 255, 0.3)'
+        },
+        fontSize: 15,
+        fontFamily: 'Consolas, "Liberation Mono", Menlo, Courier, monospace'
     });
 
-    term.open(document.getElementById('terminal'));
+    const container = document.getElementById('terminal');
+    term.open(container);
     
+    // Forzamos el foco para poder escribir nada más cargar
+    term.focus();
+
     let inputBuffer = '';
     const prompt = () => term.write(`\r\n\x1b[32muser@vscode\x1b[0m:\x1b[34m${currentPath}\x1b[0m$ `);
 
@@ -21,12 +32,11 @@ window.onload = function() {
             term.write('\r\n');
             const parts = inputBuffer.trim().split(/\s+/);
             const cmd = parts[0].toLowerCase();
-            const args = parts[1];
+            const args = parts.slice(1);
 
             if (commands[cmd]) {
-                // Ejecutar comando (pasamos term por si el comando necesita limpiar pantalla)
                 const result = commands[cmd](args, term);
-                term.write(result);
+                if (result !== undefined) term.write(result);
             } else if (cmd !== "") {
                 term.write(`bash: ${cmd}: command not found\r\n`);
             }
@@ -38,7 +48,7 @@ window.onload = function() {
                 inputBuffer = inputBuffer.slice(0, -1);
                 term.write('\b \b');
             }
-        } else {
+        } else if (data >= " " && data <= "~") { // Filtro para caracteres normales
             inputBuffer += data;
             term.write(data);
         }
