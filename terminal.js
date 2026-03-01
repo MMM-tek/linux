@@ -1,53 +1,63 @@
 window.onload = function() {
     const term = new window.Terminal({
         cursorBlink: true,
-        // ESTA LÍNEA ARREGLA EL ERROR DE LA IMAGEN
-        convertEol: true, 
-        theme: {
-            background: '#000000',
-            foreground: '#ffffff',
-            cursor: '#ffffff'
-        },
-        fontSize: 16,
-        fontFamily: 'Consolas, "Courier New", monospace'
+        convertEol: true,
+        theme: { background: '#000000', foreground: '#ffffff' },
+        fontSize: 16
     });
 
-    const container = document.getElementById('terminal');
-    term.open(container);
+    term.open(document.getElementById('terminal'));
     term.focus();
 
     let inputBuffer = '';
-    const writePrompt = () => term.write(`\x1b[32muser@vscode\x1b[0m:\x1b[34m${currentPath}\x1b[0m$ `);
+    let isEditing = false;
+    window.currentFileContent = ""; 
 
-    term.write('Visual Studio Code Terminal Simulation\r\n');
-    writePrompt();
+    const prompt = () => term.write(`\x1b[32muser@vscode\x1b[0m:\x1b[34m~\x1b[0m$ `);
+    prompt(); // Sin título, directo al prompt
 
-    term.onData(data => {
-        const code = data.charCodeAt(0);
+    term.onData(async data => {
+        if (isEditing) {
+            if (data.charCodeAt(0) === 24) { // CTRL+X
+                isEditing = false;
+                term.clear();
+                term.write("Edits kept in buffer. Type 'save' to write to disk.");
+                prompt();
+            } else if (data.charCodeAt(0) === 13) {
+                window.currentFileContent += '\n'; term.write('\n');
+            } else if (data.charCodeAt(0) === 127) {
+                window.currentFileContent = window.currentFileContent.slice(0, -1);
+                term.write('\b \b');
+            } else {
+                window.currentFileContent += data; term.write(data);
+            }
+            return;
+        }
 
-        if (code === 13) { // ENTER
+        if (data.charCodeAt(0) === 13) {
             term.write('\r\n');
             const parts = inputBuffer.trim().split(/\s+/);
             const cmd = parts[0].toLowerCase();
             const args = parts.slice(1);
 
             if (commands[cmd]) {
-                const output = commands[cmd](args, term);
-                if (output) term.write(output);
+                const res = await commands[cmd](args, term);
+                if (res && res.mode === 'edit') {
+                    isEditing = true;
+                    term.clear();
+                    term.write("\x1b[47;30m NANO EDITOR \x1b[0m (Write text... CTRL+X to exit)\r\n\r\n");
+                    term.write(window.currentFileContent);
+                } else if (res) { term.write(res); prompt(); }
+                else { prompt(); }
             } else if (cmd !== "") {
                 term.write(`bash: ${cmd}: command not found\r\n`);
-            }
-
+                prompt();
+            } else { prompt(); }
             inputBuffer = '';
-            writePrompt();
-        } else if (code === 127) { // BACKSPACE
-            if (inputBuffer.length > 0) {
-                inputBuffer = inputBuffer.slice(0, -1);
-                term.write('\b \b');
-            }
-        } else if (data >= " " && data <= "~") {
-            inputBuffer += data;
-            term.write(data);
+        } else if (data.charCodeAt(0) === 127) {
+            if (inputBuffer.length > 0) { inputBuffer = inputBuffer.slice(0, -1); term.write('\b \b'); }
+        } else {
+            inputBuffer += data; term.write(data);
         }
     });
 };

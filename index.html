@@ -2,40 +2,18 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VS Code Web Terminal</title>
-    <!-- Asegúrate de que estos nombres de archivo sean exactos -->
     <link rel="stylesheet" href="xterm.css" />
     <script src="xterm.js"></script>
-    
     <style>
-        /* Eliminamos cualquier margen y forzamos fondo negro total */
-        html, body {
-            background-color: #000000 !important;
-            margin: 0;
-            padding: 0;
-            width: 100vw;
-            height: 100vh;
-            overflow: hidden; /* Evita barras de desplazamiento */
-        }
-
-        /* Contenedor principal: ocupa el 100% sin dejar huecos */
-        #terminal {
-            width: 100%;
-            height: 100%;
-            background-color: #000000;
-        }
-
-        /* Forzamos a la librería xterm a que use fondo negro en sus capas internas */
-        .xterm-viewport, .xterm-screen, .xterm-container {
-            background-color: #000000 !important;
-        }
+        html, body { background-color: #000; margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; }
+        #terminal { width: 100vw; height: 100vh; background-color: #000; padding: 10px; box-sizing: border-box; }
+        /* Ocultar visualizador de imágenes por defecto */
+        #img-viewer { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); max-width: 80%; max-height: 80%; display: none; border: 2px solid #444; }
     </style>
 </head>
 <body>
-    <!-- Solo este div debe existir -->
     <div id="terminal"></div>
-
+    <img id="img-viewer" />
     <script src="commands.js"></script>
     <script src="terminal.js"></script>
 </body>
