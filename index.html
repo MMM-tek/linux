@@ -3,6 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="xterm.css" />
+    <script src="xterm.js"></script>
+    <!-- Primero cargamos la lógica de comandos y luego el iniciador -->
+    <script src="commands.js"></script>
+    <script src="terminal.js"></script>
     <style>
         body { background: #000; margin: 0; }
         #terminal { height: 100vh; width: 100%; }
@@ -10,10 +14,5 @@
 </head>
 <body>
     <div id="terminal"></div>
-
-    <!-- 1. La librería xterm -->
-    <script src="xterm.js"></script>
-    <!-- 2. Tu archivo de comandos -->
-    <script src="script.js"></script>
 </body>
 </html>
