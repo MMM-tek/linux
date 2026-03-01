@@ -1,6 +1,8 @@
 window.onload = function() {
     const term = new window.Terminal({
         cursorBlink: true,
+        // ESTA LÍNEA ARREGLA EL ERROR DE LA IMAGEN
+        convertEol: true, 
         theme: {
             background: '#000000',
             foreground: '#ffffff',
@@ -15,7 +17,7 @@ window.onload = function() {
     term.focus();
 
     let inputBuffer = '';
-    const writePrompt = () => term.write(`\r\n\x1b[32muser@vscode\x1b[0m:\x1b[34m${currentPath}\x1b[0m$ `);
+    const writePrompt = () => term.write(`\x1b[32muser@vscode\x1b[0m:\x1b[34m${currentPath}\x1b[0m$ `);
 
     term.write('Visual Studio Code Terminal Simulation\r\n');
     writePrompt();
@@ -31,7 +33,7 @@ window.onload = function() {
 
             if (commands[cmd]) {
                 const output = commands[cmd](args, term);
-                if (output !== undefined) term.write(output);
+                if (output) term.write(output);
             } else if (cmd !== "") {
                 term.write(`bash: ${cmd}: command not found\r\n`);
             }
