@@ -1,16 +1,24 @@
 <!doctype html>
-  <html>
-<head>
-  <!-- Cambia las rutas locales por estas de CDNJS -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net" />
-  <script src="https://cdn.jsdelivr.net"></script>
-</head>
-    <body>
-      <div id="terminal"></div>
-      <script>
-        var term = new window.Terminal(); 
-        term.open(document.getElementById('terminal'));
-        term.write('Hello from \x1B[1;3;31mxterm.js\x1B[0m $ ');
-      </script>
-    </body>
-  </html>
+<html>
+  <head>
+    <!-- Asegúrate de que las rutas coincidan con tu carpeta node_modules -->
+    <link rel="stylesheet" href="node_modules/@xterm/xterm/css/xterm.css" />
+    <script src="node_modules/@xterm/xterm/lib/xterm.js"></script>
+  </head>
+  <body>
+    <div id="terminal"></div>
+
+    <script>
+      // IMPORTANTE: En versiones nuevas se accede así
+      const term = new window.Terminal({
+        cursorBlink: true,
+        theme: {
+          background: '#1b1b1b'
+        }
+      });
+      
+      term.open(document.getElementById('terminal'));
+      term.write('Terminal local cargada correctamente \r\n$ ');
+    </script>
+  </body>
+</html>
