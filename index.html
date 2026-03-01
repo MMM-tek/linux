@@ -1,28 +1,40 @@
-<!doctype html>
-<html lang="es">
+<!DOCTYPE html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VS Code Web Terminal</title>
+    <!-- Archivos de la librería xterm que copiaste -->
     <link rel="stylesheet" href="xterm.css" />
     <script src="xterm.js"></script>
-    <!-- Primero cargamos la lógica de comandos y luego el iniciador -->
-    <script src="commands.js"></script>
-    <script src="terminal.js"></script>
-<style>
-    body {
-        background-color: #000; /* Fondo negro de la página */
-        margin: 0;
-        padding: 0;
-        overflow: hidden; /* Evita scrolls raros */
-    }
-    #terminal {
-        width: 100vw;
-        height: 100vh;
-        padding: 10px; /* Un poco de margen interno para que no pegue al borde */
-        box-sizing: border-box;
-    }
-</style>
+    
+    <style>
+        /* Pantalla completa negra sin bordes grises */
+        html, body {
+            background-color: #000000 !important;
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        #terminal {
+            width: 100vw;
+            height: 100vh;
+            background-color: #000000;
+            padding: 15px;
+            box-sizing: border-box;
+        }
+        .xterm-viewport, .xterm-screen {
+            background-color: #000000 !important;
+        }
+    </style>
 </head>
 <body>
     <div id="terminal"></div>
+
+    <!-- Importamos tus scripts de lógica -->
+    <script src="commands.js"></script>
+    <script src="terminal.js"></script>
 </body>
 </html>
