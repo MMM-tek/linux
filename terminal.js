@@ -68,7 +68,7 @@ const term = new window.Terminal({
         term.write(BANNER);
     }
 
-    const prompt = () => term.write(`\x1b[32m${userName}@vscode\x1b[0m:\x1b[34m~\x1b[0m$ `);
+    const prompt = () => term.write(`\x1b[32m${userName}@penguin\x1b[0m:\x1b[34m~\x1b[0m$ `);
     prompt();
 
     let inputBuffer = "";
