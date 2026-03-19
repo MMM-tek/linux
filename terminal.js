@@ -47,12 +47,15 @@ window.onload = async function() {
         } catch (e) { userName = 'user'; }
     }
 
-    const term = new window.Terminal({ 
-        cursorBlink: true, 
-        convertEol: true, 
-        fontSize: 16,
-        theme: { background: '#000000' }
-    });
+const term = new window.Terminal({ 
+    cursorBlink: true, 
+    convertEol: true, 
+    fontSize: 16,
+    cols: 80, // Ancho de pantalla de juego
+    rows: 28, // Suficientes filas para el banner + juego
+    theme: { background: '#000000' }
+});
+
     
     term.open(document.getElementById('terminal'));
     term.focus();
