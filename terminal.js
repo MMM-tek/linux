@@ -50,11 +50,12 @@ window.onload = async function() {
 const term = new window.Terminal({ 
     cursorBlink: true, 
     convertEol: true, 
-    fontSize: 16,
-    cols: 80, // Ancho de pantalla de juego
-    rows: 28, // Suficientes filas para el banner + juego
+    fontSize: 18, // Letra un poco más grande
+    cols: 80,     // Ancho estándar
+    rows: 26,     // Altura suficiente para el juego + score
     theme: { background: '#000000' }
 });
+
 
     
     term.open(document.getElementById('terminal'));

@@ -1,106 +1,110 @@
-// invaders.js
 export async function startSpaceInvaders(term) {
     term.clear();
     term.write("\x1b[?25l"); // Ocultar cursor
-    
-    let playerPos = 40; 
+
+    const COLS = 80;
+    const ROWS = 24;
+    let playerX = 40;
     let bullets = [];
     let enemies = [];
     let score = 0;
     let direction = 1;
     let gameOver = false;
-    const GROUND_LINE = 20; // Línea de derrota
+    let tick = 0;
 
-    // Crear 48 enemigos (4 filas x 12 columnas)
-    for(let row = 0; row < 4; row++) {
-        for(let col = 0; col < 12; col++) {
-            enemies.push({ x: col * 6 + 5, y: row + 3, alive: true });
+    // Crear oleada de enemigos
+    for (let row = 0; row < 4; row++) {
+        for (let col = 0; col < 10; col++) {
+            enemies.push({ x: col * 7 + 5, y: row + 2, alive: true });
         }
     }
 
     return new Promise((resolve) => {
-        const gameInterval = setInterval(async () => {
+        const gameLoop = setInterval(() => {
             if (gameOver) return;
+            tick++;
 
-            // Movimiento de proyectiles
-            bullets.forEach(b => b.y -= 1);
+            // 1. Mover Balas
+            bullets.forEach(b => b.y--);
             bullets = bullets.filter(b => b.y > 0);
 
-            let shiftDown = false;
-            const activeEnemies = enemies.filter(e => e.alive);
-            
-            activeEnemies.forEach(e => {
-                e.x += direction * 0.8;
-                if (e.x > 74 || e.x < 2) shiftDown = true;
-                
-                // CONDICIÓN DE DERROTA
-                if (e.y >= GROUND_LINE - 1) {
-                    gameOver = true;
-                }
-            });
+            // 2. Mover Enemigos (Cada 3 ticks para que no vuelen)
+            let reachEdge = false;
+            if (tick % 3 === 0) {
+                enemies.filter(e => e.alive).forEach(e => {
+                    e.x += direction;
+                    if (e.x >= COLS - 5 || e.x <= 1) reachEdge = true;
+                });
 
-            if (shiftDown) {
-                direction *= -1;
-                enemies.forEach(e => e.y += 1);
+                if (reachEdge) {
+                    direction *= -1;
+                    enemies.filter(e => e.alive).forEach(e => {
+                        e.y++;
+                        // COLISIÓN: Si tocan al jugador o el suelo
+                        if (e.y >= ROWS - 2) gameOver = "LOSER";
+                    });
+                }
             }
 
-            // Detección de impactos
-            bullets.forEach((b, bi) => {
-                enemies.forEach((e) => {
-                    if (e.alive && Math.abs(b.x - e.x) < 3 && Math.abs(b.y - e.y) < 0.8) {
+            // 3. Colisiones Bala -> Enemigo
+            bullets.forEach((b, bIdx) => {
+                enemies.filter(e => e.alive).forEach(e => {
+                    if (Math.abs(b.x - (e.x + 1)) <= 2 && b.y === e.y) {
                         e.alive = false;
-                        bullets.splice(bi, 1);
+                        bullets.splice(bIdx, 1);
                         score += 10;
                     }
                 });
             });
 
-            // --- RENDERIZADO ---
-            let frame = "\x1b[H"; // Volver al inicio (0,0)
-            frame += `\x1b[33m SCORE: ${score.toString().padStart(4, '0')} \x1b[0m | A-D: Move | SPACE: Fire | ESC: Exit\r\n`;
-            frame += "\x1b[90m" + "─".repeat(80) + "\x1b[0m\r\n";
-            
-            // Dibujar 22 líneas de juego
-            for (let y = 1; y <= 22; y++) {
+            // 4. Dibujar Pantalla (Buffer completo para evitar parpadeo)
+            let out = "\x1b[H"; // Cursor a 0,0
+            out += `\x1b[44;37m SCORE: ${score.toString().padStart(4, '0')} \x1b[0m  A/D: Move | SPACE: Shoot | ESC: Exit\r\n`;
+
+            for (let y = 1; y < ROWS; y++) {
                 let line = "";
-                for (let x = 0; x < 80; x++) {
-                    let char = " ";
-                    // Jugador en la penúltima línea
-                    if (y === 21 && x === playerPos) char = "\x1b[32m-^-\x1b[0m";
+                let lastX = 0;
+                
+                // Dibujar contenido de la línea
+                if (y === ROWS - 2) { // Línea del Jugador
+                    line = " ".repeat(playerX) + "\x1b[32m-^-\x1b[0m" + " ".repeat(COLS - playerX - 3);
+                } else {
+                    let rowChars = new Array(COLS).fill(" ");
+                    
                     // Balas
-                    bullets.forEach(b => { if (Math.round(b.x) === x && Math.round(b.y) === y) char = "!"; });
+                    bullets.forEach(b => { if (b.y === y) rowChars[b.x] = "\x1b[33m!\x1b[0m"; });
+                    
                     // Enemigos
-                    enemies.forEach(e => { if (e.alive && Math.round(e.x) === x && Math.round(e.y) === y) char = "\x1b[31m<OX>\x1b[0m"; });
-                    line += char;
+                    enemies.filter(e => e.alive && e.y === y).forEach(e => {
+                        rowChars[Math.floor(e.x)] = "\x1b[31m<\x1b[0m";
+                        rowChars[Math.floor(e.x) + 1] = "\x1b[31mO\x1b[0m";
+                        rowChars[Math.floor(e.x) + 2] = "\x1b[31m>\x1b[0m";
+                    });
+                    line = rowChars.join("");
                 }
-                frame += line + "\r\n";
+                out += line + "\r\n";
             }
-            term.write(frame);
+            term.write(out);
+
+            // 5. Verificar Victoria
+            if (enemies.filter(e => e.alive).length === 0) gameOver = "WINNER";
 
             if (gameOver) {
-                term.write("\r\n\x1b[31;1m  GAME OVER! Aliens reached the ground. Press ENTER \x1b[0m");
-                clearInterval(gameInterval);
+                clearInterval(gameLoop);
+                term.write(`\r\n\x1b[1;${gameOver === "WINNER" ? "32" : "31"}m  *** ${gameOver}! Final Score: ${score} ***\x1b[0m\r\n  Press ENTER to exit`);
+                if (window.CrazyGames && gameOver === "WINNER") window.CrazyGames.SDK.game.reportScore(score);
             }
+        }, 50);
 
-            if (activeEnemies.length === 0 && !gameOver) {
-                gameOver = true;
-                term.write("\r\n\x1b[32;1m  VICTORY! Reporting score... Press ENTER \x1b[0m");
-                if (window.CrazyGames) await window.CrazyGames.SDK.game.reportScore(score);
-                clearInterval(gameInterval);
-            }
-        }, 60);
-
-        const controller = term.onData(data => {
-            const key = data.toLowerCase();
-            if (key === 'a' && playerPos > 2) playerPos -= 2;
-            if (key === 'd' && playerPos < 76) playerPos += 2;
-            if (key === ' ') bullets.push({ x: playerPos + 1, y: 20 });
+        const input = term.onData(data => {
+            if (data === 'a' || data === 'A') if (playerX > 1) playerX -= 2;
+            if (data === 'd' || data === 'D') if (playerX < COLS - 4) playerX += 2;
+            if (data === ' ') if (bullets.length < 3) bullets.push({ x: playerX + 1, y: ROWS - 3 });
             
-            // Salida manual o tras ganar/perder
             if (data.charCodeAt(0) === 27 || (gameOver && data.charCodeAt(0) === 13)) {
-                clearInterval(gameInterval);
-                controller.dispose();
-                term.write("\x1b[?25h"); 
+                clearInterval(gameLoop);
+                input.dispose();
+                term.write("\x1b[?25h");
                 term.clear();
                 resolve();
             }
